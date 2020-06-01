@@ -1,7 +1,8 @@
 import tweepy
 import geopy
 from geopy.geocoders import Nominatim
-import pandas as pd
+import json
+import datetime
 
 consumer_key = 'Uy4VXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 consumer_secret = 'Ewt9jXXXXXXXXXXXXXXXXXXXXXXXX'

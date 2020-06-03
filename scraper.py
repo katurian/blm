@@ -10,18 +10,39 @@ def default(obj):
         return obj.isoformat()
 
 def getCityGeocode(city, radius_km):
-    geolocator = Nominatim(user_agent="BLM")
+    geolocator = Nominatim(user_agent="BLM", timeout=10)
     location = geolocator.geocode(city)
     geocode = f'{location.latitude},{location.longitude},{radius_km}km'
     return geocode
 
-def getTweetsInHashtag(query, count, geocode):
-    tweets = tweepy.Cursor(api.search, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, q=f'{query} -filter:retweets', geocode=geocode, tweet_mode='extended', rpp=100).items(count)
+def getTweetsInHashtag(query, count, geocode, since, until, filter_retweets):
+    if (since == False) and (until == False):
+        timeframe = ''
+    else:
+        timeframe = f'since:{since} until:{until}'
+    if filter_retweets == False:
+        retweets = ''
+    else:
+        retweets = 'filter:retweets'
+    tweets = tweepy.Cursor(api.search, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, q=f'{query} {retweets} {timeframe}', geocode=geocode, tweet_mode='extended', rpp=100).items(count)
     data = [{'tweet_id':tweet.id_str, 'handle':tweet.author.screen_name, 'created_at':tweet.created_at, 'author_loc':tweet.author.location, 'retweet_count':tweet.retweet_count,
-             'text':tweet.full_text,} for tweet in tweets if 'RT' not in tweet.full_text]
+             'text':tweet.full_text,} for tweet in tweets]
     data = json.dumps(data, default=default)
     return data
- 
+
+def getHandlesInHashtag(query, count, geocode, since, until, filter_retweets):
+    if (since == False) and (until == False):
+        timeframe = ''
+    else:
+        timeframe = f'since:{since} until:{until}'
+    if filter_retweets == False:
+        retweets = ''
+    else:
+        retweets = 'filter:retweets'
+    tweets = tweepy.Cursor(api.search, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, q=f'{query} {retweets} {timeframe}', geocode=geocode, tweet_mode='extended', rpp=100).items(count)
+    data = [[tweet.author.screen_name][for tweet in tweets]]
+    return data
+
 def getAccountTweets(handle):
     tweets = []  
     new_tweets = api.user_timeline(screen_name = handle, tweet_mode='extended', wait_on_rate_limit=True, wait_on_rate_limit_notify=True, count=200)
@@ -39,11 +60,8 @@ def getAccountTweets(handle):
     data = json.dumps(data, default=default)
     return data
 
-data = getTweetsInHashtag('#ChicagoRiots', 50, getCityGeocode('Chicago, IL', 100))
+def findVisitors(all_handles, local_handles): 
+    temp = set(local_handles) 
+    visitors = [handle for handles in all_handles if handle not in local_handles] 
+    return visitors
 
-with open('blm_chicagoriots_2020.json', 'w') as file:
-    file.write(data)
-
-data = getAccountTweets('realdonaldtrump')
-with open('account_example.json', 'w') as file:
-    file.write(data)

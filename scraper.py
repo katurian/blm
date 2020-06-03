@@ -30,7 +30,7 @@ def getTweetsInHashtag(query, count, geocode, since, until, filter_retweets):
     data = json.dumps(data, default=default)
     return data
 
-def getHandlesInHashtag(query, count, geocode, since, until, filter_retweets):
+def getHandles(query, count, geocode, since, until, filter_retweets):
     if (since == False) and (until == False):
         timeframe = ''
     else:
@@ -40,8 +40,14 @@ def getHandlesInHashtag(query, count, geocode, since, until, filter_retweets):
     else:
         retweets = 'filter:retweets'
     tweets = tweepy.Cursor(api.search, wait_on_rate_limit=True, wait_on_rate_limit_notify=True, q=f'{query} {retweets} {timeframe}', geocode=geocode, tweet_mode='extended', rpp=100).items(count)
-    data = [[tweet.author.screen_name][for tweet in tweets]]
+    data = [tweet.author.screen_name for tweet in tweets]
+    data = list(set(data)) 
     return data
+
+def findVisitors(all_handles, local_handles): 
+    temp = set(local_handles) 
+    visitors = [handle for handle in all_handles if handle not in local_handles] 
+    return visitors
 
 def getAccountTweets(handle):
     tweets = []  
@@ -59,9 +65,4 @@ def getAccountTweets(handle):
 
     data = json.dumps(data, default=default)
     return data
-
-def findVisitors(all_handles, local_handles): 
-    temp = set(local_handles) 
-    visitors = [handle for handles in all_handles if handle not in local_handles] 
-    return visitors
 
